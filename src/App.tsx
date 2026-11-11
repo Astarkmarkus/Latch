@@ -4,9 +4,9 @@ import type { Session } from '@supabase/supabase-js';
 import {
   ArrowLeft, ArrowRight, BadgeCheck, Bell, BookOpen, Camera, Check, ChevronRight,
   Compass, Cookie, Download, Film, Gamepad2, Globe2, Heart, HeartHandshake, Info,
-  LockKeyhole, LogOut, Mail, MapPin, MessageCircle, Music2, Plus, Search, Send,
-  Settings2, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, UtensilsCrossed,
-  UserRound, X, Flag, Plane, LoaderCircle, Eye, EyeOff, Play, Smile, RotateCcw
+  LockKeyhole, LogOut, MapPin, MessageCircle, Music2, Plus, Search, Send,
+  Settings2, ShieldCheck, Sparkles, Trash2, UtensilsCrossed,
+  UserRound, X, Flag, Plane, LoaderCircle, Eye, EyeOff
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import type { Profile, LatchMatch, LatchMessage, LatchNotification } from './lib/supabase';
@@ -70,7 +70,6 @@ export default function App(){
  const w=words[lang];
  const [page,setPage]=useState<Page>('discover');
  const [session,setSession]=useState<Session|null>(null);
- const [authReady,setAuthReady]=useState(false);
  const [authOpen,setAuthOpen]=useState(false);
  const [signup,setSignup]=useState(true);
  const [email,setEmail]=useState('');
@@ -114,8 +113,8 @@ export default function App(){
  useEffect(()=>{localStorage.setItem('latch-lang',lang);document.documentElement.lang=lang},[lang]);
  useEffect(()=>{
   let mounted=true;
-  supabase.auth.getSession().then(({data})=>{if(mounted){setSession(data.session);setAuthReady(true)}}).catch(()=>setAuthReady(true));
-  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>{if(mounted){setSession(s);setAuthReady(true)}});
+  supabase.auth.getSession().then(({data})=>{if(mounted){setSession(data.session)}}).catch(()=>{});
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>{if(mounted){setSession(s)}});
   if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
   return()=>{mounted=false;subscription.unsubscribe()};
  },[]);
@@ -218,7 +217,7 @@ export default function App(){
   if(!me){const date=new Date(birthday+'T12:00:00Z');const now=new Date();let age=now.getUTCFullYear()-date.getUTCFullYear();if(now.getUTCMonth()<date.getUTCMonth()||(now.getUTCMonth()===date.getUTCMonth()&&now.getUTCDate()<date.getUTCDate()))age--;if(!Number.isFinite(age)||age<18||age>110){notice(tr('adultOnly'),true);return}}
   setBusy(true);
   if(!me){
-   const {error}=await supabase.from('latch_private_profiles').insert({user_id:uid,birth_date:birthday,terms_accepted_at:new Date().toISOString(),sensitive_data_consent_at:sensitiveConsent?new Date().toISOString():null});
+   const {error}=await supabase.from('latch_private_profiles').upsert({user_id:uid,birth_date:birthday,terms_accepted_at:new Date().toISOString(),sensitive_data_consent_at:sensitiveConsent?new Date().toISOString():null});
    if(error){notice(error.message,true);setBusy(false);return}
   }
   const values={...draft,display_name:draft.display_name.trim(),city:draft.city.trim(),country:draft.country.trim(),bio:draft.bio.trim(),prompt_question:draft.prompt_question.trim(),prompt_answer:draft.prompt_answer.trim()};
