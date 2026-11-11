@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# Closed development beta: remove this restriction only after launch readiness review.
